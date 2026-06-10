@@ -12,10 +12,10 @@
     "desktop": "electron .",
     "dev": "node --watch server.js",
     "test": "node --test",
-    "dist": "electron-builder",
-    "dist:win": "electron-builder --win portable --x64",
-    "dist:mac": "electron-builder --mac dmg --universal",
-    "dist:linux": "electron-builder --linux AppImage --x64"
+    "dist": "electron-builder --publish never",
+    "dist:win": "electron-builder --win portable --x64 --publish never",
+    "dist:mac": "electron-builder --mac dmg --universal --publish never",
+    "dist:linux": "electron-builder --linux AppImage --x64 --publish never"
   },
   "engines": {
     "node": ">=20"
@@ -23,7 +23,7 @@
   "build": {
     "appId": "com.streammatrix.app",
     "productName": "StreamMatrix",
-    "copyright": "Copyright © 2026 StreamMatrix",
+    "copyright": "Copyright (c) 2026 StreamMatrix",
     "asar": true,
     "directories": {
       "output": "dist"

@@ -41,6 +41,9 @@ test("package configuration defines all native distribution targets", async () =
   assert.equal(packageJson.build.mac.target[0].target, "dmg");
   assert.equal(packageJson.build.mac.target[0].arch[0], "universal");
   assert.equal(packageJson.build.linux.target[0].target, "AppImage");
+  assert.match(packageJson.scripts["dist:win"], /--publish never/);
+  assert.match(packageJson.scripts["dist:mac"], /--publish never/);
+  assert.match(packageJson.scripts["dist:linux"], /--publish never/);
 });
 
 test("GitHub release workflow includes native runners for every platform", async () => {
@@ -52,5 +55,5 @@ test("GitHub release workflow includes native runners for every platform", async
   assert.match(workflow, /npm run dist:win/);
   assert.match(workflow, /npm run dist:mac/);
   assert.match(workflow, /npm run dist:linux/);
-  assert.match(workflow, /gh release create/);
+  assert.match(workflow, /gh release upload/);
 });
