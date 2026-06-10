@@ -1,0 +1,88 @@
+{
+  "name": "streammatrix",
+  "version": "1.0.0",
+  "private": true,
+  "author": "StreamMatrix",
+  "description": "Watch Twitch, Kick, and YouTube live streams in one responsive dashboard.",
+  "desktopName": "streammatrix.desktop",
+  "type": "module",
+  "main": "desktop/main.js",
+  "scripts": {
+    "start": "node server.js",
+    "desktop": "electron .",
+    "dev": "node --watch server.js",
+    "test": "node --test",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win portable --x64",
+    "dist:mac": "electron-builder --mac dmg --universal",
+    "dist:linux": "electron-builder --linux AppImage --x64"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "build": {
+    "appId": "com.streammatrix.app",
+    "productName": "StreamMatrix",
+    "copyright": "Copyright © 2026 StreamMatrix",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "assets/**/*",
+      "desktop/**/*",
+      "public/**/*",
+      "src/**/*",
+      "server.js",
+      "package.json"
+    ],
+    "win": {
+      "icon": "assets/streammatrix-icon.ico",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "StreamMatrix-${version}-portable.${ext}"
+    },
+    "mac": {
+      "icon": "assets/streammatrix-icon.icns",
+      "category": "public.app-category.entertainment",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "artifactName": "StreamMatrix-${version}-mac-universal.${ext}"
+    },
+    "linux": {
+      "icon": "assets/linux",
+      "category": "AudioVideo",
+      "executableName": "streammatrix",
+      "syncDesktopName": true,
+      "synopsis": "Watch multiple live streams in one dashboard",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "StreamMatrix-${version}-${arch}.${ext}"
+    },
+    "appImage": {
+      "artifactName": "StreamMatrix-${version}-${arch}.AppImage"
+    }
+  },
+  "devDependencies": {
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.2"
+  }
+}
