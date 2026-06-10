@@ -54,7 +54,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   color: inherit;
   font: inherit;
 }
@@ -67,6 +68,7 @@ select {
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
+textarea:focus-visible,
 a:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -396,17 +398,20 @@ svg {
   color: var(--text-subtle);
 }
 
-.stream-input-wrap input {
+.stream-input-wrap textarea {
   width: 100%;
   min-width: 0;
+  height: 20px;
   padding: 0;
+  resize: none;
   background: transparent;
   border: 0;
   outline: 0;
   font-size: 13px;
+  line-height: 20px;
 }
 
-.stream-input-wrap input::placeholder {
+.stream-input-wrap textarea::placeholder {
   color: var(--text-subtle);
 }
 
@@ -414,7 +419,7 @@ svg {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 16px;
+  gap: 8px;
 }
 
 .switch-label {
@@ -469,9 +474,46 @@ svg {
 }
 
 .stream-count {
+  margin-right: 8px;
   color: var(--text-subtle);
   font-size: 11px;
   white-space: nowrap;
+}
+
+.saved-layout-select {
+  position: relative;
+  min-width: 132px;
+}
+
+.saved-layout-select::after {
+  position: absolute;
+  top: 13px;
+  right: 11px;
+  width: 5px;
+  height: 5px;
+  border-right: 1.5px solid var(--text-muted);
+  border-bottom: 1.5px solid var(--text-muted);
+  content: "";
+  pointer-events: none;
+  transform: rotate(45deg);
+}
+
+.saved-layout-select select {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 28px 0 10px;
+  appearance: none;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.compact-button {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
 }
 
 .form-message {
@@ -657,6 +699,15 @@ svg {
   background: #050608;
 }
 
+.stream-card.dragging {
+  opacity: 0.5;
+}
+
+.stream-card.drag-target {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
 .player-wrap {
   position: relative;
   min-height: 300px;
@@ -700,12 +751,21 @@ svg {
 
 .stream-meta {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 9px;
   padding: 0 10px 0 13px;
   background: var(--surface);
   border-top: 1px solid var(--border);
+}
+
+.drag-stream-button {
+  width: 28px;
+  cursor: grab;
+}
+
+.drag-stream-button:active {
+  cursor: grabbing;
 }
 
 .platform-dot {
@@ -858,6 +918,7 @@ svg {
 
   .toolbar-options {
     grid-column: 2;
+    flex-wrap: wrap;
   }
 
   .workspace.chat-open {
@@ -923,6 +984,11 @@ svg {
   .toolbar-options {
     grid-column: 1;
     justify-content: space-between;
+  }
+
+  .saved-layout-select {
+    order: 3;
+    width: 100%;
   }
 
   .workspace,

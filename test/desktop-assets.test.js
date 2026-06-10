@@ -37,7 +37,12 @@ test("package configuration defines all native distribution targets", async () =
   assert.equal(packageJson.build.linux.icon, "assets/linux");
   assert.equal(packageJson.desktopName, "streammatrix.desktop");
   assert.equal(packageJson.build.linux.syncDesktopName, true);
-  assert.equal(packageJson.build.win.target[0].target, "portable");
+  assert.deepEqual(
+    new Set(packageJson.build.win.target.map(({ target }) => target)),
+    new Set(["nsis", "portable"])
+  );
+  assert.equal(packageJson.build.nsis.artifactName, "StreamMatrix-${version}-installer.${ext}");
+  assert.equal(packageJson.build.portable.artifactName, "StreamMatrix-${version}-portable.${ext}");
   assert.equal(packageJson.build.mac.target[0].target, "dmg");
   assert.equal(packageJson.build.mac.target[0].arch[0], "universal");
   assert.equal(packageJson.build.linux.target[0].target, "AppImage");

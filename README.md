@@ -4,12 +4,15 @@ StreamMatrix is a local web application for watching multiple Twitch, Kick, and 
 
 ## Features
 
-- Add up to nine streams by Twitch/Kick username or YouTube handle/live URL.
+- Add up to nine streams by Twitch/Kick username or YouTube handle/live URL, including multiple entries at once.
 - Automatically adapts the video grid to the number of active streams.
+- Drag streams to change their layout order.
+- Save, load, update, and delete named stream layouts.
 - Optional right-side chat with a selector for the active stream.
 - Mute or unmute every active stream without reloading the players.
-- Light, dark, and system color themes.
-- Persists streams and preferences in local browser storage.
+- Light, dark, and system color themes that persist between sessions.
+- Persists active streams and preferences in local browser storage.
+- Restores the desktop window's size, position, and maximized state.
 - Opens official platform login pages so supported embeds can use the same browser session.
 
 ## Run The Desktop App
@@ -31,15 +34,18 @@ npm run dist:mac
 npm run dist:linux
 ```
 
-- Windows produces `dist/StreamMatrix-1.0.2-portable.exe`.
+- Windows produces both:
+  - `dist/StreamMatrix-1.0.3-installer.exe`, an installable application with Start menu and desktop shortcuts.
+  - `dist/StreamMatrix-1.0.3-portable.exe`, which runs without installation.
 - macOS produces a universal Intel/Apple Silicon DMG.
 - Linux produces an x64 AppImage. Run it with `chmod +x StreamMatrix-*.AppImage`.
 
 The generic `npm run dist` command builds the configured target for the current operating system.
+To build only one Windows package, use `npm run dist:win:installer` or `npm run dist:win:portable`.
 
 ## Release Builds
 
-The GitHub Actions workflow at `.github/workflows/release.yml` builds all three platforms in parallel. It can be run manually from the Actions tab. Pushing a version tag such as `v1.0.2` also creates a GitHub Release containing the Windows executable, universal macOS DMG, and Linux AppImage.
+The GitHub Actions workflow at `.github/workflows/release.yml` builds all three platforms in parallel. It can be run manually from the Actions tab. Pushing a version tag such as `v1.0.3` also creates a GitHub Release containing the Windows installer and portable executable, universal macOS DMG, and Linux AppImage.
 
 The release workflow creates unsigned builds by default. Windows SmartScreen and macOS Gatekeeper may warn users until platform signing certificates are configured.
 

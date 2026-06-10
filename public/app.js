@@ -1,3 +1,5 @@
+import { moveStream, normalizeTheme, parseStreamInputs } from "./state.js";
+
 const STORAGE_KEY = "streammatrix-state-v1";
 const MAX_STREAMS = 9;
 
@@ -17,12 +19,16 @@ const elements = {
   chatSelect: document.querySelector("#chat-select"),
   chatToggle: document.querySelector("#chat-toggle"),
   closeChatButton: document.querySelector("#close-chat-button"),
+  deleteLayoutButton: document.querySelector("#delete-layout-button"),
   emptyStateTemplate: document.querySelector("#empty-state-template"),
   form: document.querySelector("#add-stream-form"),
   formMessage: document.querySelector("#form-message"),
+  loadLayoutButton: document.querySelector("#load-layout-button"),
   mobileMenuButton: document.querySelector("#mobile-menu-button"),
   muteAllButton: document.querySelector("#mute-all-button"),
   platformSelect: document.querySelector("#platform-select"),
+  saveLayoutButton: document.querySelector("#save-layout-button"),
+  savedLayoutSelect: document.querySelector("#saved-layout-select"),
   streamCardTemplate: document.querySelector("#stream-card-template"),
   streamCount: document.querySelector("#stream-count"),
   streamGrid: document.querySelector("#stream-grid"),
@@ -40,18 +46,26 @@ function loadState() {
     chatEnabled: false,
     activeChatId: null,
     muted: false,
-    theme: "system"
+    theme: "system",
+    savedLayouts: []
   };
 
   try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    const stored = window.streamMatrixDesktop?.loadState?.() ?? JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (!stored || !Array.isArray(stored.streams)) {
       return fallback;
     }
     return {
       ...fallback,
       ...stored,
-      streams: stored.streams.filter(isValidStoredStream).slice(0, MAX_STREAMS)
+      streams: stored.streams.filter(isValidStoredStream).slice(0, MAX_STREAMS),
+      theme: normalizeTheme(stored.theme),
+      savedLayouts: Array.isArray(stored.savedLayouts)
+        ? stored.savedLayouts.filter(isValidSavedLayout).map((layout) => ({
+            ...layout,
+            streams: layout.streams.filter(isValidStoredStream).slice(0, MAX_STREAMS)
+          }))
+        : []
     };
   } catch {
     return fallback;
@@ -68,8 +82,26 @@ function isValidStoredStream(stream) {
   );
 }
 
+function isValidSavedLayout(layout) {
+  return (
+    layout &&
+    typeof layout.id === "string" &&
+    typeof layout.name === "string" &&
+    layout.name.trim().length > 0 &&
+    Array.isArray(layout.streams)
+  );
+}
+
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (window.streamMatrixDesktop?.saveState) {
+    window.streamMatrixDesktop.saveState(state);
+  } else {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+}
+
+function copyStreams(streams) {
+  return streams.map((stream) => ({ ...stream }));
 }
 
 function normalizeUsername(value) {
@@ -189,7 +221,66 @@ function renderStreams() {
       removeStream(stream.id);
     });
 
+    configureStreamDrag(card, stream.id);
     elements.streamGrid.append(card);
+  }
+}
+
+function configureStreamDrag(card, streamId) {
+  const handle = card.querySelector(".drag-stream-button");
+  handle.draggable = true;
+  handle.addEventListener("dragstart", (event) => {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", streamId);
+    requestAnimationFrame(() => card.classList.add("dragging"));
+  });
+  handle.addEventListener("dragend", () => {
+    card.classList.remove("dragging");
+    clearDragTargets();
+  });
+  card.addEventListener("dragover", (event) => {
+    if (event.dataTransfer.types.includes("text/plain")) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      clearDragTargets();
+      card.classList.add("drag-target");
+    }
+  });
+  card.addEventListener("dragleave", (event) => {
+    if (!card.contains(event.relatedTarget)) {
+      card.classList.remove("drag-target");
+    }
+  });
+  card.addEventListener("drop", (event) => {
+    event.preventDefault();
+    const sourceId = event.dataTransfer.getData("text/plain");
+    clearDragTargets();
+    reorderStream(sourceId, streamId);
+  });
+}
+
+function clearDragTargets() {
+  for (const card of elements.streamGrid.querySelectorAll(".drag-target")) {
+    card.classList.remove("drag-target");
+  }
+}
+
+function reorderStream(sourceId, targetId) {
+  const movement = moveStream(state.streams, sourceId, targetId);
+  if (!movement) return;
+  const { sourceIndex, targetIndex } = movement;
+  saveState();
+
+  const sourceCard = elements.streamGrid.querySelector(`[data-stream-id="${CSS.escape(sourceId)}"]`);
+  const targetCard = elements.streamGrid.querySelector(`[data-stream-id="${CSS.escape(targetId)}"]`);
+  const sourceOption = elements.chatSelect.querySelector(`option[value="${CSS.escape(sourceId)}"]`);
+  const targetOption = elements.chatSelect.querySelector(`option[value="${CSS.escape(targetId)}"]`);
+  if (sourceIndex < targetIndex) {
+    targetCard?.after(sourceCard);
+    targetOption?.after(sourceOption);
+  } else {
+    targetCard?.before(sourceCard);
+    targetOption?.before(sourceOption);
   }
 }
 
@@ -246,8 +337,29 @@ function render() {
   setTheme(state.theme);
   renderStreams();
   renderChat();
+  renderSavedLayouts();
   updateChatButtons();
   updateMuteButton();
+}
+
+function renderSavedLayouts(selectedId = elements.savedLayoutSelect.value) {
+  elements.savedLayoutSelect.replaceChildren();
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Saved layouts";
+  elements.savedLayoutSelect.append(placeholder);
+
+  for (const layout of state.savedLayouts) {
+    const option = document.createElement("option");
+    option.value = layout.id;
+    option.textContent = layout.name;
+    elements.savedLayoutSelect.append(option);
+  }
+
+  elements.savedLayoutSelect.value = state.savedLayouts.some((layout) => layout.id === selectedId) ? selectedId : "";
+  const hasSelection = Boolean(elements.savedLayoutSelect.value);
+  elements.loadLayoutButton.disabled = !hasSelection;
+  elements.deleteLayoutButton.disabled = !hasSelection;
 }
 
 function showMessage(message, isError = false) {
@@ -303,32 +415,118 @@ async function buildStream(platform, input) {
 async function addStream(event) {
   event.preventDefault();
   const platform = elements.platformSelect.value;
-  const input = elements.streamInput.value.trim();
+  const inputs = parseStreamInputs(elements.streamInput.value);
 
-  if (!input) return;
-  if (state.streams.length >= MAX_STREAMS) {
+  if (inputs.length === 0) return;
+  const availableSlots = MAX_STREAMS - state.streams.length;
+  if (availableSlots === 0) {
     showMessage(`StreamMatrix supports up to ${MAX_STREAMS} streams at once.`, true);
+    return;
+  }
+  if (inputs.length > availableSlots) {
+    showMessage(`You can add ${availableSlots} more ${availableSlots === 1 ? "stream" : "streams"}.`, true);
     return;
   }
 
   setSubmitting(true);
   try {
-    const stream = await buildStream(platform, input);
-    if (state.streams.some((item) => item.id === stream.id)) {
-      throw new Error("That stream is already in your matrix.");
+    const results = await Promise.allSettled(inputs.map((input) => buildStream(platform, input)));
+    const existingIds = new Set(state.streams.map((stream) => stream.id));
+    const addedStreams = [];
+    const errors = [];
+
+    results.forEach((result, index) => {
+      if (result.status === "rejected") {
+        errors.push(`${inputs[index]}: ${result.reason.message}`);
+      } else if (existingIds.has(result.value.id)) {
+        errors.push(`${inputs[index]}: already in your matrix`);
+      } else {
+        existingIds.add(result.value.id);
+        addedStreams.push(result.value);
+      }
+    });
+
+    if (addedStreams.length === 0) {
+      throw new Error(errors.join(" ") || "No streams were added.");
     }
-    state.streams.push(stream);
-    state.activeChatId ??= stream.id;
+
+    state.streams.push(...addedStreams);
+    state.activeChatId ??= addedStreams[0].id;
     elements.streamInput.value = "";
     saveState();
     renderStreams();
     renderChat();
+    if (errors.length > 0) {
+      showMessage(`Added ${addedStreams.length}. ${errors.join(" ")}`, true);
+    } else if (addedStreams.length > 1) {
+      showMessage(`Added ${addedStreams.length} streams.`);
+    }
   } catch (error) {
     showMessage(error.message, true);
   } finally {
     setSubmitting(false);
     elements.streamInput.focus();
   }
+}
+
+function saveCurrentLayout() {
+  if (state.streams.length === 0) {
+    showMessage("Add at least one stream before saving a layout.", true);
+    return;
+  }
+
+  const name = window.prompt("Name this stream layout:");
+  if (name === null) return;
+  const trimmedName = name.trim();
+  if (!trimmedName) {
+    showMessage("Enter a name for the saved layout.", true);
+    return;
+  }
+
+  const existingLayout = state.savedLayouts.find(
+    (layout) => layout.name.toLowerCase() === trimmedName.toLowerCase()
+  );
+  if (existingLayout) {
+    existingLayout.name = trimmedName;
+    existingLayout.streams = copyStreams(state.streams);
+    saveState();
+    renderSavedLayouts(existingLayout.id);
+    showMessage(`Updated "${trimmedName}".`);
+    return;
+  }
+
+  const layout = {
+    id: globalThis.crypto?.randomUUID?.() ?? `layout-${Date.now()}`,
+    name: trimmedName,
+    streams: copyStreams(state.streams)
+  };
+  state.savedLayouts.push(layout);
+  saveState();
+  renderSavedLayouts(layout.id);
+  showMessage(`Saved "${trimmedName}".`);
+}
+
+function loadSelectedLayout() {
+  const layout = state.savedLayouts.find((item) => item.id === elements.savedLayoutSelect.value);
+  if (!layout) return;
+
+  state.streams = copyStreams(layout.streams);
+  state.activeChatId = state.streams[0]?.id ?? null;
+  state.chatEnabled = state.chatEnabled && state.streams.length > 0;
+  saveState();
+  renderStreams();
+  renderChat();
+  showMessage(`Loaded "${layout.name}".`);
+}
+
+function deleteSelectedLayout() {
+  const layout = state.savedLayouts.find((item) => item.id === elements.savedLayoutSelect.value);
+  if (!layout || !window.confirm(`Delete the saved layout "${layout.name}"?`)) return;
+
+  state.savedLayouts = state.savedLayouts.filter((item) => item.id !== layout.id);
+  saveState();
+  renderSavedLayouts();
+  showMessage(`Deleted "${layout.name}".`);
 }
 
 function removeStream(streamId) {
@@ -343,15 +541,19 @@ function removeStream(streamId) {
 
 function updatePlaceholder() {
   const placeholders = {
-    twitch: "Enter Twitch username",
-    kick: "Enter Kick username",
-    youtube: "Enter @handle or live URL"
+    twitch: "Enter Twitch usernames, separated by commas",
+    kick: "Enter Kick usernames, separated by commas",
+    youtube: "Enter handles or live URLs, separated by commas"
   };
   elements.streamInput.placeholder = placeholders[elements.platformSelect.value];
 }
 
 elements.form.addEventListener("submit", addStream);
 elements.platformSelect.addEventListener("change", updatePlaceholder);
+elements.savedLayoutSelect.addEventListener("change", () => renderSavedLayouts(elements.savedLayoutSelect.value));
+elements.saveLayoutButton.addEventListener("click", saveCurrentLayout);
+elements.loadLayoutButton.addEventListener("click", loadSelectedLayout);
+elements.deleteLayoutButton.addEventListener("click", deleteSelectedLayout);
 elements.muteAllButton.addEventListener("click", async () => {
   if (!window.streamMatrixDesktop) {
     showMessage("Mute all is available in the StreamMatrix desktop application.", true);

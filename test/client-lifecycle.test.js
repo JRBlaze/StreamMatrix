@@ -25,3 +25,24 @@ test("chat updates preserve mounted stream players", () => {
     assert.doesNotMatch(chatHandlerSection, /renderStreams\s*\(/);
   }
 });
+
+test("drag reordering preserves mounted stream players", () => {
+  const reorderSection = clientSource.match(
+    /function reorderStream\(sourceId, targetId\) \{([\s\S]*?)\r?\n\}\r?\n\r?\nfunction renderChat/
+  )?.[1];
+
+  assert.ok(reorderSection, "reorderStream function was not found");
+  assert.doesNotMatch(reorderSection, /renderStreams\s*\(/);
+  assert.doesNotMatch(reorderSection, /renderChat\s*\(/);
+  assert.match(reorderSection, /saveState\s*\(\)/);
+});
+
+test("theme and named stream layouts are included in persistent state", () => {
+  assert.match(clientSource, /theme:\s*"system"/);
+  assert.match(clientSource, /savedLayouts:\s*\[\]/);
+  assert.match(clientSource, /window\.streamMatrixDesktop\?\.loadState/);
+  assert.match(clientSource, /window\.streamMatrixDesktop\.saveState\(state\)/);
+  assert.match(clientSource, /localStorage\.setItem\(STORAGE_KEY,\s*JSON\.stringify\(state\)\)/);
+  assert.match(clientSource, /function saveCurrentLayout\(\)/);
+  assert.match(clientSource, /function loadSelectedLayout\(\)/);
+});

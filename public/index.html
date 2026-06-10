@@ -73,14 +73,15 @@
           </label>
           <label class="stream-input-wrap">
             <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
-            <span class="sr-only">Streamer username</span>
-            <input
+            <span class="sr-only">Streamer usernames or stream URLs</span>
+            <textarea
               id="stream-input"
               name="stream"
               autocomplete="off"
-              placeholder="Enter Twitch username"
+              placeholder="Enter Twitch usernames"
               required
-            >
+              rows="1"
+            ></textarea>
           </label>
           <button class="button button-primary" id="add-stream-button" type="submit">
             <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
@@ -95,6 +96,17 @@
             Show live chat
           </label>
           <span class="stream-count" id="stream-count">0 streams</span>
+          <label class="saved-layout-select">
+            <span class="sr-only">Saved stream layout</span>
+            <select id="saved-layout-select" aria-label="Saved stream layout">
+              <option value="">Saved layouts</option>
+            </select>
+          </label>
+          <button class="button button-quiet compact-button" id="save-layout-button" type="button">Save</button>
+          <button class="button button-quiet compact-button" id="load-layout-button" type="button" disabled>Load</button>
+          <button class="icon-button" id="delete-layout-button" type="button" aria-label="Delete saved layout" disabled>
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16m-10 4v6m4-6v6M9 7l1-3h4l1 3m3 0-1 14H7L6 7"/></svg>
+          </button>
         </div>
         <p class="form-message" id="form-message" role="status" hidden></p>
       </section>
@@ -150,6 +162,9 @@
         </div>
         <footer class="stream-meta">
           <span class="platform-dot"></span>
+          <button class="icon-button drag-stream-button" type="button" aria-label="Drag to reorder stream" title="Drag to reorder">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 7h.01M15 7h.01M9 12h.01M15 12h.01M9 17h.01M15 17h.01"/></svg>
+          </button>
           <div>
             <strong class="stream-name"></strong>
             <span class="stream-platform"></span>
