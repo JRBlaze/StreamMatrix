@@ -1,6 +1,6 @@
 {
   "name": "streammatrix",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": true,
   "author": "StreamMatrix",
   "description": "Watch Twitch, Kick, and YouTube live streams in one responsive dashboard.",

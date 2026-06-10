@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const clientSource = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
+const styleSource = await readFile(new URL("../public/styles.css", import.meta.url), "utf8");
 
 test("chat updates preserve mounted stream players", () => {
   const sources = [
@@ -45,4 +46,10 @@ test("theme and named stream layouts are included in persistent state", () => {
   assert.match(clientSource, /localStorage\.setItem\(STORAGE_KEY,\s*JSON\.stringify\(state\)\)/);
   assert.match(clientSource, /function saveCurrentLayout\(\)/);
   assert.match(clientSource, /function loadSelectedLayout\(\)/);
+});
+
+test("native dropdown options use the active color theme", () => {
+  assert.match(styleSource, /select,\s*\r?\noption\s*\{[\s\S]*?color-scheme:\s*inherit/);
+  assert.match(styleSource, /select,\s*\r?\noption\s*\{[\s\S]*?background-color:\s*var\(--surface-raised\)/);
+  assert.match(styleSource, /select,\s*\r?\noption\s*\{[\s\S]*?color:\s*var\(--text\)/);
 });

@@ -60,6 +60,13 @@ textarea {
   font: inherit;
 }
 
+select,
+option {
+  color-scheme: inherit;
+  background-color: var(--surface-raised);
+  color: var(--text);
+}
+
 button,
 select {
   cursor: pointer;
