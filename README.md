@@ -31,7 +31,7 @@ npm run dist:mac
 npm run dist:linux
 ```
 
-- Windows produces `dist/StreamMatrix-1.0.0-portable.exe`.
+- Windows produces `dist/StreamMatrix-1.0.1-portable.exe`.
 - macOS produces a universal Intel/Apple Silicon DMG.
 - Linux produces an x64 AppImage. Run it with `chmod +x StreamMatrix-*.AppImage`.
 
@@ -39,7 +39,7 @@ The generic `npm run dist` command builds the configured target for the current 
 
 ## Release Builds
 
-The GitHub Actions workflow at `.github/workflows/release.yml` builds all three platforms in parallel. It can be run manually from the Actions tab. Pushing a version tag such as `v1.0.0` also creates a GitHub Release containing the Windows executable, universal macOS DMG, and Linux AppImage.
+The GitHub Actions workflow at `.github/workflows/release.yml` builds all three platforms in parallel. It can be run manually from the Actions tab. Pushing a version tag such as `v1.0.1` also creates a GitHub Release containing the Windows executable, universal macOS DMG, and Linux AppImage.
 
 The release workflow creates unsigned builds by default. Windows SmartScreen and macOS Gatekeeper may warn users until platform signing certificates are configured.
 
