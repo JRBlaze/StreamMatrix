@@ -55,5 +55,6 @@ test("GitHub release workflow includes native runners for every platform", async
   assert.match(workflow, /npm run dist:win/);
   assert.match(workflow, /npm run dist:mac/);
   assert.match(workflow, /npm run dist:linux/);
+  assert.match(workflow, /GH_REPO: \$\{\{ github\.repository \}\}/);
   assert.match(workflow, /gh release upload/);
 });
