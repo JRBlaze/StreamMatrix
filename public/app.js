@@ -158,7 +158,7 @@ function setTheme(theme) {
 
 function updateMuteButton() {
   elements.muteAllButton.setAttribute("aria-pressed", String(state.muted));
-  elements.muteAllButton.querySelector("span").textContent = state.muted ? "Unmute all" : "Mute all";
+  elements.muteAllButton.querySelector("span").textContent = state.muted ? "Unmute All" : "Mute All";
   elements.muteAllButton.title = state.muted ? "Unmute every stream" : "Mute every stream";
 }
 
@@ -346,7 +346,7 @@ function renderSavedLayouts(selectedId = elements.savedLayoutSelect.value) {
   elements.savedLayoutSelect.replaceChildren();
   const placeholder = document.createElement("option");
   placeholder.value = "";
-  placeholder.textContent = "Saved layouts";
+  placeholder.textContent = "Saved Layouts";
   elements.savedLayoutSelect.append(placeholder);
 
   for (const layout of state.savedLayouts) {
@@ -374,7 +374,7 @@ function showMessage(message, isError = false) {
 
 function setSubmitting(isSubmitting) {
   elements.addButton.disabled = isSubmitting;
-  elements.addButton.lastChild.textContent = isSubmitting ? " Resolving..." : " Add stream";
+  elements.addButton.lastChild.textContent = isSubmitting ? " Resolving..." : " Add Stream";
 }
 
 async function buildStream(platform, input) {
@@ -549,6 +549,14 @@ function updatePlaceholder() {
 }
 
 elements.form.addEventListener("submit", addStream);
+elements.streamInput.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" || event.shiftKey) {
+    return;
+  }
+
+  event.preventDefault();
+  elements.form.requestSubmit();
+});
 elements.platformSelect.addEventListener("change", updatePlaceholder);
 elements.savedLayoutSelect.addEventListener("change", () => renderSavedLayouts(elements.savedLayoutSelect.value));
 elements.saveLayoutButton.addEventListener("click", saveCurrentLayout);
@@ -556,7 +564,7 @@ elements.loadLayoutButton.addEventListener("click", loadSelectedLayout);
 elements.deleteLayoutButton.addEventListener("click", deleteSelectedLayout);
 elements.muteAllButton.addEventListener("click", async () => {
   if (!window.streamMatrixDesktop) {
-    showMessage("Mute all is available in the StreamMatrix desktop application.", true);
+    showMessage("Mute All is available in the StreamMatrix desktop application.", true);
     return;
   }
 
