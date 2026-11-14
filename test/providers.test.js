@@ -69,3 +69,22 @@ test("resolveYouTubeLiveVideo returns null for an offline channel page", async (
     null
   );
 });
+
+test("YouTube parsers reject malformed URLs, missing IDs, and non-channel paths", () => {
+  for (const input of ["http://[", ""]) {
+    assert.equal(extractYouTubeVideoId(input), null);
+    assert.equal(normalizeYouTubeChannelInput(input), null);
+  }
+  assert.equal(extractYouTubeVideoId("https://youtu.be"), null);
+  assert.equal(extractYouTubeVideoId("https://youtu.be/too-short"), null);
+  assert.equal(extractYouTubeVideoId("https://www.youtube.com/watch?v=too-short"), null);
+  assert.equal(normalizeYouTubeChannelInput("https://www.youtube.com/watch?v=too-short"), null);
+  assert.equal(normalizeYouTubeChannelInput("GoogleDevelopers"), "https://www.youtube.com/@GoogleDevelopers/live");
+});
+
+test("YouTube resolution reports upstream HTTP errors", async () => {
+  await assert.rejects(
+    resolveYouTubeLiveVideo("https://www.youtube.com/@channel/live", async () => ({ ok: false, status: 503 })),
+    /YouTube returned 503/
+  );
+});

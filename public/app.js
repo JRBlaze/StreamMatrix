@@ -1,7 +1,7 @@
 import { moveStream, normalizeTheme, parseStreamInputs } from "./state.js";
 
 const STORAGE_KEY = "streammatrix-state-v1";
-const MAX_STREAMS = 9;
+const MAX_STREAMS = 15;
 
 const platformLabels = {
   twitch: "Twitch",
@@ -178,12 +178,14 @@ async function applyMuteState() {
 function calculateColumns(count) {
   if (count <= 1) return 1;
   if (count <= 4) return 2;
-  return 3;
+  if (count <= 9) return 3;
+  return Math.ceil(count / 3);
 }
 
 function renderStreams() {
   elements.streamGrid.replaceChildren();
   elements.streamGrid.classList.toggle("is-empty", state.streams.length === 0);
+  elements.streamGrid.classList.toggle("stream-grid-expanded", state.streams.length > 9);
   elements.streamGrid.style.setProperty("--columns", calculateColumns(state.streams.length));
   elements.streamCount.textContent = `${state.streams.length} ${state.streams.length === 1 ? "stream" : "streams"}`;
 
