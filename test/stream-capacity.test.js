@@ -33,7 +33,10 @@ function startRenderer(stored = null) {
       replaceChildren() { this.children = []; },
       append(child) { this.children.push(child); },
       cloneNode() { return node(); },
-      focus() {}
+      focus() { this.focused = true; },
+      showModal() { this.open = true; },
+      close() { this.open = false; },
+      select() {}
     };
   }
 
@@ -52,7 +55,7 @@ function startRenderer(stored = null) {
   runInNewContext(source.replace(/^import .+\r?\n/, ""), {
     ...stateHelpers,
     document: { querySelector: select, createElement: node, documentElement: node(), addEventListener() {} },
-    window: { location: { hostname: "localhost" }, matchMedia: node, prompt: () => "Full matrix" },
+    window: { location: { hostname: "localhost" }, matchMedia: node },
     localStorage: { getItem: () => serialized, setItem: (_key, value) => { serialized = value; } },
     setTimeout() {},
     clearTimeout() {}
@@ -98,6 +101,22 @@ test("reloading and restoring a saved layout keeps 15 valid streams in order", a
   const original = startRenderer();
   await original.submit(names.slice(0, 15));
   original.select("#save-layout-button").handlers.click();
+  assert.equal(original.select("#save-layout-dialog").open, true);
+  assert.equal(original.select("#save-layout-name").focused, true);
+  original.select("#save-layout-name").value = "   ";
+  original.select("#save-layout-form").handlers.submit({ preventDefault() {} });
+  assert.equal(original.select("#save-layout-dialog").open, true);
+  assert.equal(original.stored.savedLayouts.length, 0);
+  assert.equal(original.select("#save-layout-error").hidden, false);
+  original.select("#save-layout-cancel").handlers.click();
+  assert.equal(original.select("#save-layout-dialog").open, false);
+  assert.equal(original.stored.savedLayouts.length, 0);
+  original.select("#save-layout-button").handlers.click();
+  original.select("#save-layout-name").value = " Full matrix ";
+  original.select("#save-layout-form").handlers.submit({ preventDefault() {} });
+  assert.equal(original.select("#save-layout-dialog").open, false);
+  assert.equal(original.stored.savedLayouts[0].name, "Full matrix");
+  assert.equal(original.select("#load-layout-button").disabled, false);
   const stored = original.stored;
   const extra = { id: "extra", name: "extra", platform: "kick" };
   stored.streams.push(extra);
@@ -108,7 +127,11 @@ test("reloading and restoring a saved layout keeps 15 valid streams in order", a
   assert.equal(grid.children.length, 15);
   assert.deepEqual(reopened.stored.streams.map(({ name }) => name), names.slice(0, 15));
 
+  grid.children[0].querySelector(".remove-stream-button").handlers.click();
+  assert.equal(grid.children.length, 14);
   reopened.select("#saved-layout-select").value = stored.savedLayouts[0].id;
+  reopened.select("#saved-layout-select").handlers.change();
+  assert.equal(reopened.select("#load-layout-button").disabled, false);
   reopened.select("#load-layout-button").handlers.click();
   assert.equal(grid.children.length, 15);
   assert.deepEqual(reopened.stored.streams.map(({ name }) => name), names.slice(0, 15));
@@ -125,4 +148,33 @@ test("expanded grids reserve Twitch-sized player tracks and preserve the mobile 
     })) });
     assert.equal(renderer.select("#stream-grid").classList.contains("stream-grid-expanded"), expanded);
   }
+});
+
+test("the layout form has an accessible name, a text field, and separate save and cancel controls", async () => {
+  const html = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
+  const css = await readFile(new URL("../public/styles.css", import.meta.url), "utf8");
+  assert.match(html, /<dialog class="layout-dialog" id="save-layout-dialog" aria-labelledby="save-layout-title">/);
+  assert.match(html, /<form id="save-layout-form">[\s\S]*?<label for="save-layout-name">[\s\S]*?<input id="save-layout-name" type="text"/);
+  assert.match(html, /id="save-layout-cancel" type="button"/);
+  assert.match(html, /type="submit">Save Layout<\/button>/);
+  assert.match(css, /\.layout-dialog::backdrop\s*\{/);
+});
+
+test("saving over an existing layout updates its streams and preserves its ID", async () => {
+  const renderer = startRenderer({
+    streams: [],
+    savedLayouts: [{ id: "original", name: "Full matrix", streams: [] }]
+  });
+  renderer.select("#save-layout-button").handlers.click();
+  assert.ok(!renderer.select("#save-layout-dialog").open);
+  await renderer.submit(["channel_one"]);
+  renderer.select("#save-layout-button").handlers.click();
+  renderer.select("#save-layout-name").value = "FULL MATRIX";
+  renderer.select("#save-layout-form").handlers.submit({ preventDefault() {} });
+  assert.deepEqual(renderer.stored.savedLayouts, [{
+    id: "original",
+    name: "FULL MATRIX",
+    streams: renderer.stored.streams
+  }]);
+  assert.equal(renderer.select("#saved-layout-select").value, "original");
 });

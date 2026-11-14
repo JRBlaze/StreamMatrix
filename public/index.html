@@ -136,6 +136,19 @@
       </div>
     </main>
 
+    <dialog class="layout-dialog" id="save-layout-dialog" aria-labelledby="save-layout-title">
+      <form id="save-layout-form">
+        <h2 id="save-layout-title">Save Layout</h2>
+        <label for="save-layout-name">Layout name</label>
+        <input id="save-layout-name" type="text" aria-describedby="save-layout-error" required autofocus>
+        <p class="layout-dialog-error" id="save-layout-error" role="alert" hidden>Enter a name for the saved layout.</p>
+        <div class="layout-dialog-actions">
+          <button class="button button-quiet" id="save-layout-cancel" type="button">Cancel</button>
+          <button class="button button-primary" type="submit">Save Layout</button>
+        </div>
+      </form>
+    </dialog>
+
     <template id="empty-state-template">
       <div class="empty-state">
         <div class="empty-visual" aria-hidden="true">

@@ -24,6 +24,11 @@ const elements = {
   form: document.querySelector("#add-stream-form"),
   formMessage: document.querySelector("#form-message"),
   loadLayoutButton: document.querySelector("#load-layout-button"),
+  saveLayoutDialog: document.querySelector("#save-layout-dialog"),
+  saveLayoutForm: document.querySelector("#save-layout-form"),
+  saveLayoutName: document.querySelector("#save-layout-name"),
+  saveLayoutError: document.querySelector("#save-layout-error"),
+  saveLayoutCancel: document.querySelector("#save-layout-cancel"),
   mobileMenuButton: document.querySelector("#mobile-menu-button"),
   muteAllButton: document.querySelector("#mute-all-button"),
   platformSelect: document.querySelector("#platform-select"),
@@ -471,19 +476,28 @@ async function addStream(event) {
   }
 }
 
-function saveCurrentLayout() {
+function openSaveLayoutDialog() {
   if (state.streams.length === 0) {
     showMessage("Add at least one stream before saving a layout.", true);
     return;
   }
 
-  const name = window.prompt("Name this stream layout:");
-  if (name === null) return;
-  const trimmedName = name.trim();
+  elements.saveLayoutName.value = "";
+  elements.saveLayoutError.hidden = true;
+  elements.saveLayoutDialog.showModal();
+  elements.saveLayoutName.focus();
+}
+
+function saveCurrentLayout(event) {
+  event.preventDefault();
+  const trimmedName = elements.saveLayoutName.value.trim();
   if (!trimmedName) {
-    showMessage("Enter a name for the saved layout.", true);
+    elements.saveLayoutError.hidden = false;
+    elements.saveLayoutName.focus();
     return;
   }
+
+  elements.saveLayoutDialog.close();
 
   const existingLayout = state.savedLayouts.find(
     (layout) => layout.name.toLowerCase() === trimmedName.toLowerCase()
@@ -561,7 +575,9 @@ elements.streamInput.addEventListener("keydown", (event) => {
 });
 elements.platformSelect.addEventListener("change", updatePlaceholder);
 elements.savedLayoutSelect.addEventListener("change", () => renderSavedLayouts(elements.savedLayoutSelect.value));
-elements.saveLayoutButton.addEventListener("click", saveCurrentLayout);
+elements.saveLayoutButton.addEventListener("click", openSaveLayoutDialog);
+elements.saveLayoutForm.addEventListener("submit", saveCurrentLayout);
+elements.saveLayoutCancel.addEventListener("click", () => elements.saveLayoutDialog.close());
 elements.loadLayoutButton.addEventListener("click", loadSelectedLayout);
 elements.deleteLayoutButton.addEventListener("click", deleteSelectedLayout);
 elements.muteAllButton.addEventListener("click", async () => {

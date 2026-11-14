@@ -44,7 +44,7 @@ test("theme and named stream layouts are included in persistent state", () => {
   assert.match(clientSource, /window\.streamMatrixDesktop\?\.loadState/);
   assert.match(clientSource, /window\.streamMatrixDesktop\.saveState\(state\)/);
   assert.match(clientSource, /localStorage\.setItem\(STORAGE_KEY,\s*JSON\.stringify\(state\)\)/);
-  assert.match(clientSource, /function saveCurrentLayout\(\)/);
+  assert.match(clientSource, /function saveCurrentLayout\(event\)/);
   assert.match(clientSource, /function loadSelectedLayout\(\)/);
 });
 
