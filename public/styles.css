@@ -566,6 +566,13 @@ svg {
   background: var(--border);
 }
 
+@media (min-width: 761px) {
+  .stream-grid-expanded {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, max(400px, calc((100% - (var(--columns) - 1) * 1px) / var(--columns)))), 1fr));
+    grid-auto-rows: minmax(352px, 1fr);
+  }
+}
+
 .stream-grid.is-empty {
   display: block;
   background: var(--bg);

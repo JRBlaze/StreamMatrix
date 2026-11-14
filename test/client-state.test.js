@@ -24,3 +24,11 @@ test("stored color themes are limited to supported values", () => {
   assert.equal(normalizeTheme("system"), "system");
   assert.equal(normalizeTheme("invalid"), "system");
 });
+
+test("stream ordering ignores missing IDs and drops onto the same stream", () => {
+  const streams = [{ id: "one" }, { id: "two" }];
+  assert.equal(moveStream(streams, "missing", "two"), null);
+  assert.equal(moveStream(streams, "one", "missing"), null);
+  assert.equal(moveStream(streams, "one", "one"), null);
+  assert.deepEqual(streams, [{ id: "one" }, { id: "two" }]);
+});

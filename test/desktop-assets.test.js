@@ -63,3 +63,10 @@ test("GitHub release workflow includes native runners for every platform", async
   assert.match(workflow, /GH_REPO: \$\{\{ github\.repository \}\}/);
   assert.match(workflow, /gh release upload/);
 });
+
+test("the app and lockfile agree on the desktop release version", async () => {
+  const manifest = JSON.parse(await readFile(projectFile("package.json"), "utf8"));
+  const lockfile = JSON.parse(await readFile(projectFile("package-lock.json"), "utf8"));
+  assert.equal(lockfile.version, manifest.version);
+  assert.equal(lockfile.packages[""].version, manifest.version);
+});

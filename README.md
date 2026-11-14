@@ -4,7 +4,7 @@ StreamMatrix is a local web application for watching multiple Twitch, Kick, and 
 
 ## Features
 
-- Add up to nine streams by Twitch/Kick username or YouTube handle/live URL.
+- Add up to 15 streams by Twitch/Kick username or YouTube handle/live URL.
 - Automatically adapts the video grid to the number of active streams.
 - Optional right-side chat with a selector for the active stream.
 - Mute or unmute every active stream without reloading the players.
